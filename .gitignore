@@ -1,0 +1,11 @@
+build/
+cmake-build-*/
+.idea/
+*.o
+*.obj
+*.elf
+*.bin
+*.hex
+*.map
+*.su
+*.log
