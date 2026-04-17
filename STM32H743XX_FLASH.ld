@@ -233,7 +233,7 @@ SECTIONS
     *(.dma_buffer)
     *(.dma_buffer*)
     . = ALIGN(32);
-  } >RAM
+  } >RAM_D2
 
   PROVIDE( __bss_start = __tbss_start );
   PROVIDE( __bss_size = __bss_end - __bss_start );

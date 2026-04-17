@@ -31,8 +31,10 @@ typedef struct
   volatile size_t tx_pending_len;
 } BridgeChannel;
 
-static uint8_t g_pc_to_screen_storage[BRIDGE_RING_BUFFER_SIZE];
-static uint8_t g_screen_to_pc_storage[BRIDGE_RING_BUFFER_SIZE];
+static uint8_t g_pc_to_screen_storage[BRIDGE_RING_BUFFER_SIZE]
+    __attribute__((section(".dma_buffer"), aligned(32)));
+static uint8_t g_screen_to_pc_storage[BRIDGE_RING_BUFFER_SIZE]
+    __attribute__((section(".dma_buffer"), aligned(32)));
 static uint8_t g_usart1_rx_dma_buffer[BRIDGE_RX_DMA_BUFFER_SIZE]
     __attribute__((section(".dma_buffer"), aligned(32)));
 static uint8_t g_usart6_rx_dma_buffer[BRIDGE_RX_DMA_BUFFER_SIZE]
@@ -369,7 +371,7 @@ static void Bridge_TryStartTx(BridgeChannel *channel)
   channel->tx_pending_len = tx_len;
   Bridge_ExitCritical(primask);
 
-  if (HAL_UART_Transmit_IT(channel->tx_uart, tx_ptr, (uint16_t)tx_len) != HAL_OK)
+  if (HAL_UART_Transmit_DMA(channel->tx_uart, tx_ptr, (uint16_t)tx_len) != HAL_OK)
   {
     primask = Bridge_EnterCritical();
     channel->tx_pending_len = 0U;
