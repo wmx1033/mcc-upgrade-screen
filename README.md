@@ -26,7 +26,7 @@
 - 两个独立环形缓冲（每方向 `16KB`）：
   - `USART1 -> USART6`
   - `USART6 -> USART1`
-- RX：`HAL_UART_Receive_IT(..., 1)` 按字节接收，原样入队
+- RX：`HAL_UARTEx_ReceiveToIdle_DMA` 接收，按 DMA 片段原样入队
 - TX：`HAL_UART_Transmit_DMA` 从队列线性段直接发送，发送完成后出队
 - 不做协议解析/转义/校验，不插入任何结束符；`0x05` 与其他字节等价透明转发
 
@@ -69,3 +69,11 @@ cmake --build --preset Debug
 
 - 禁止在 `USART1/USART6` 路径上使用 `printf` 或任何日志输出
 - 如需升级为 ACK 超时保护，可在 `App/bridge` 内增加“可选状态机”，但仍必须保证数据阶段完全透明
+
+## 7. 调试状态（仅 SWD 观察）
+
+为避免串口污染，桥接状态只保存在内存中，不输出到 `USART1/USART6`：
+
+- 通过 `Bridge_GetStats()` 可读取累计统计
+- `fault_code != BRIDGE_FAULT_NONE` 代表桥接进入故障态（例如环形缓冲溢出）
+- 故障态下会停止继续桥接，避免“静默丢字节但流程继续”的隐蔽错误

@@ -9,3 +9,8 @@ cmake-build-*/
 *.map
 *.su
 *.log
+.DS_Store
+.venv/
+test/*.tft
+__pycache__/
+*.pyc
