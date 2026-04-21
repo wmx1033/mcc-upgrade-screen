@@ -65,12 +65,58 @@ cmake --build --preset Debug
 - 观察是否存在卡死、超时、NACK、文件损坏
 - 统计总发送字节与接收确认节奏是否一致
 
-## 6. 注意事项
+## 6. 配套脚本
+
+仓库附带两个 Python 脚本，用于通过 MCU 桥接烧录淘晶驰（TJC）串口屏 `.tft` 固件。两者均依赖 `pyserial`：
+
+```bash
+pip install pyserial
+```
+
+### 6.1 `scripts/flash_via_mcu.py`（命令行，推荐自动化/回归测试）
+
+无 GUI，所有输出为机器可解析的键值对，适合 CI 与批量压测。流程：自动联机 → 发送 `whmi-wri <size>,115200,0` → 4096 字节分包 → 每包等 `0x05` ACK。
+
+```bash
+python scripts/flash_via_mcu.py \
+  --port /dev/tty.usbserial-XXXX \
+  --file test/demo.tft
+```
+
+可选参数：
+
+- `--chunk-size`：数据阶段分包大小，默认 `4096`（与屏协议一致，请勿随意改）
+- `--ack-timeout-s`：单包 ACK 超时，默认 `5.0` 秒
+- `--boot-wait-s`：发送 `whmi-wri` 后等待首个 `0x05` 的时间，默认 `0.35` 秒
+
+退出码：`0` 成功；`1` 联机失败；`2` 未收到首个 `0x05`；`3` 数据阶段 ACK 超时；`10/11` 参数/文件错误。
+
+典型压测用法（配合 `test/big.tft` 做大文件回归）：
+
+```bash
+for i in $(seq 1 10); do
+  python scripts/flash_via_mcu.py --port /dev/tty.usbserial-XXXX --file test/big.tft || break
+done
+```
+
+### 6.2 `test/tftdownloader.py`（Tkinter GUI，手动验证用）
+
+图形化的下载工具，用于手工点按验证：
+
+```bash
+python test/tftdownloader.py
+```
+
+使用步骤：选择 MCU 所在串口 → 选择下载波特率（默认 `921600`）→ 选择 `.tft` 文件 → 点击“开始下载”。窗口会显示实时速度、进度和日志。
+
+> 注意：GUI 的“下载波特率”会触发屏端切换波特率。若要严格对应本工程“三端固定 115200”的策略，请把下载波特率改为 `115200`；使用更高波特率时，需确认 MCU 固件与上位机在 `whmi-wri` 之后也同步切换，否则会 ACK 超时。
+
+## 7. 注意事项
 
 - 禁止在 `USART1/USART6` 路径上使用 `printf` 或任何日志输出
 - 如需升级为 ACK 超时保护，可在 `App/bridge` 内增加“可选状态机”，但仍必须保证数据阶段完全透明
 
-## 7. 调试状态（仅 SWD 观察）
+## 8. 调试状态（仅 SWD 观察）
 
 为避免串口污染，桥接状态只保存在内存中，不输出到 `USART1/USART6`：
 
