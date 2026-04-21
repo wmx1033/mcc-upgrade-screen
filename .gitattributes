@@ -1,0 +1,52 @@
+# 统一换行符处理，避免 CLion / Git 在 macOS 与 Windows / ST 厂商文件之间反复标记 CRLF <-> LF 差异。
+# 策略：仓库内文本文件统一以 LF 入库，检出时由 Git 按平台处理；二进制与厂商原样保留。
+
+# 默认：文本自动识别，入库一律转为 LF
+* text=auto eol=lf
+
+# 源代码与构建脚本 —— 强制 LF
+*.c        text eol=lf
+*.h        text eol=lf
+*.cpp      text eol=lf
+*.hpp      text eol=lf
+*.s        text eol=lf
+*.S        text eol=lf
+*.ld       text eol=lf
+*.inc      text eol=lf
+
+*.py       text eol=lf
+*.sh       text eol=lf
+
+CMakeLists.txt      text eol=lf
+*.cmake             text eol=lf
+CMakePresets.json   text eol=lf
+
+*.md       text eol=lf
+*.txt      text eol=lf
+*.json     text eol=lf
+*.yml      text eol=lf
+*.yaml     text eol=lf
+*.ioc      text eol=lf
+*.mxproject text eol=lf
+
+# Windows 专用脚本保持 CRLF
+*.bat      text eol=crlf
+*.cmd      text eol=crlf
+*.ps1      text eol=crlf
+
+# 二进制资源，禁止换行符转换与文本 diff
+*.tft      binary
+*.bin      binary
+*.hex      binary
+*.elf      binary
+*.o        binary
+*.a        binary
+*.lib      binary
+*.so       binary
+*.dll      binary
+*.png      binary
+*.jpg      binary
+*.jpeg     binary
+*.gif      binary
+*.ico      binary
+*.pdf      binary
